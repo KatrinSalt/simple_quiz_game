@@ -1,2 +1,3 @@
-# simple_quiz_game
+# Simple Quiz Game in Golang
+
 Following tutorial: https://github.com/gophercises/quiz
