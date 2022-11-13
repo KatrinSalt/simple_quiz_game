@@ -1,11 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"encoding/csv"
 	"fmt"
 	"log"
 	"os"
-	"reflect"
+	"strings"
 )
 
 // type Question struct {
@@ -21,7 +22,13 @@ type Quiz struct {
 	answers   []string
 }
 
+var (
+	correct_answers int
+	wrong_answers   int
+)
+
 func main() {
+
 	records, err := readData("test_questions.csv")
 	if err != nil {
 		log.Fatal(err)
@@ -32,20 +39,33 @@ func main() {
 	// define a new object of struct Quiz
 	// quiz_game := new(Quiz)
 
-	quiz_game := &Quiz{
-		questions: []string{},
-	}
-
-	// //printing address
-	// fmt.Printf("%p\n", quiz_game)
-	// fmt.Println(reflect.TypeOf(quiz_game))
-
+	quiz_game := &Quiz{}
 	quiz_game.AddItem(records)
 
-	fmt.Printf("%v\n", *quiz_game)
-	fmt.Printf("Quiz questions: %v\n", quiz_game.questions)
+	fmt.Printf("Number of questions: %v\n", len(quiz_game.questions))
 	fmt.Printf("Quiz answers: %v\n", quiz_game.answers)
 
+	fmt.Println("Hello my friend. What is your name?")
+	name, err := readUserInput()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Nice to meet you, %v! It's time to take a Quiz and have fun!\n", name)
+
+	for num, question := range quiz_game.questions {
+
+		fmt.Printf("Question number %v: %v\n", (num + 1), question)
+		answer, err := readUserInput()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		calculateResult(answer, quiz_game.answers[num])
+	}
+
+	fmt.Printf("Congratulations, %v! You answered all the quiz questions. Here is your result\n", name)
+	fmt.Printf("Number of correct answers: %v\nNumber of wrong answers %v\n", correct_answers, wrong_answers)
+	fmt.Printf("You solved %v%% of the quiz. Now relax and drink your beer:)\n", (correct_answers)*100/len(quiz_game.questions))
 }
 
 func readData(fileName string) ([][]string, error) {
@@ -76,10 +96,9 @@ func readData(fileName string) ([][]string, error) {
 }
 
 func (quiz_game *Quiz) AddItem(records [][]string) {
-
 	//printing address
-	fmt.Printf("%p\n", quiz_game)
-	fmt.Println(reflect.TypeOf(quiz_game))
+	// fmt.Printf("%p\n", quiz_game)
+	// fmt.Println(reflect.TypeOf(quiz_game))
 
 	for _, record := range records {
 		quiz_question := record[0]
@@ -91,11 +110,33 @@ func (quiz_game *Quiz) AddItem(records [][]string) {
 
 }
 
-// creating a function for a struct Quiz (creating a method for a class)
-// func (quiz *Quiz) AddItems(question Question, answer Answer) ([]Question, []Answer) {
+func readUserInput() (string, error) {
+	for {
+		fmt.Println("Your answer:")
+		reader := bufio.NewReader(os.Stdin)
+		user_answer, err := reader.ReadString('\n')
+		if err != nil {
+			return user_answer, err
+		} else if user_answer != "\n" && strings.TrimSpace(user_answer) != "" {
+			return strings.TrimSpace(user_answer), nil
+		} else {
+			fmt.Println("You should provide an answer even if it is wrong! Please, try again")
+			continue
+		}
+	}
+}
 
-// 	quiz.questions = append(quiz.questions, question)
-// 	quiz.answers = append(quiz.answers, answer)
+// do you always need to return error?
+func checkAnswer(userAnswer string, correctAnswer string) bool {
 
-// 	return quiz.questions, quiz.answers
-// }
+	return strings.EqualFold(userAnswer, correctAnswer)
+}
+
+func calculateResult(userAnswer string, correctAnswer string) {
+
+	if checkAnswer(userAnswer, correctAnswer) {
+		correct_answers++
+	} else {
+		wrong_answers++
+	}
+}
