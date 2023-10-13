@@ -70,6 +70,19 @@ func main() {
 
 func readData(fileName string) ([][]string, error) {
 
+	// Multi-Dimensional slice:
+	// [][]string Multi-dimensional slice are
+	// just like the multidimensional array, except that slice does not contain the size.
+
+	// Example:
+	// Creating multi-dimensional slice
+	// s1 := [][]int{{12, 34},
+	// {56, 47},
+	// {29, 40},
+	// {46, 78}
+
+	// Output: [[12 34] [56 47] [29 40] [46 78]]
+
 	file, err := os.Open(fileName)
 
 	if err != nil {
@@ -128,12 +141,13 @@ func readUserInput() (string, error) {
 
 // do you always need to return error?
 func checkAnswer(userAnswer string, correctAnswer string) bool {
-
+	// strings.EqualFold() Function in Golang reports whether s and t,
+	// interpreted as UTF-8 strings, are equal under Unicode case-folding,
+	// which is a more general form of case-insensitivity.
 	return strings.EqualFold(userAnswer, correctAnswer)
 }
 
 func calculateResult(userAnswer string, correctAnswer string) {
-
 	if checkAnswer(userAnswer, correctAnswer) {
 		correct_answers++
 	} else {
