@@ -7,15 +7,10 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 )
 
-// type Question struct {
-// 	question string
-// }
-
-// type Answer struct {
-// 	answer string
-// }
+// TODO: Run program with customizattion via flag: quiz-name, timer time
 
 type Quiz struct {
 	questions []string
@@ -25,9 +20,12 @@ type Quiz struct {
 var (
 	correct_answers int
 	wrong_answers   int
+	timeout         time.Duration
 )
 
 func main() {
+	// add timeout for the quiz game
+	timeout = 10
 
 	records, err := readData("test_questions.csv")
 	if err != nil {
@@ -52,6 +50,22 @@ func main() {
 	}
 	fmt.Printf("Nice to meet you, %v! It's time to take a Quiz and have fun!\n", name)
 
+	// TODO: ADD "ENTER LOGIC"
+
+	go quiz(quiz_game)
+
+	select {
+	case <-time.After(timeout * time.Second):
+		fmt.Println("You are out of the time! Let's calculate your results.")
+	}
+
+	// fmt.Printf("Congratulations, %v! You answered all the quiz questions. Here is your result\n", name)
+	fmt.Printf("Number of correct answers: %v\nNumber of wrong answers %v\n", correct_answers, wrong_answers)
+	fmt.Printf("You solved %v%% of the quiz. Now relax and drink your beer:)\n", (correct_answers)*100/len(quiz_game.questions))
+}
+
+func quiz(quiz_game *Quiz) {
+	// run the quiz questions
 	for num, question := range quiz_game.questions {
 
 		fmt.Printf("Question number %v: %v\n", (num + 1), question)
@@ -62,10 +76,6 @@ func main() {
 
 		calculateResult(answer, quiz_game.answers[num])
 	}
-
-	fmt.Printf("Congratulations, %v! You answered all the quiz questions. Here is your result\n", name)
-	fmt.Printf("Number of correct answers: %v\nNumber of wrong answers %v\n", correct_answers, wrong_answers)
-	fmt.Printf("You solved %v%% of the quiz. Now relax and drink your beer:)\n", (correct_answers)*100/len(quiz_game.questions))
 }
 
 func readData(fileName string) ([][]string, error) {
