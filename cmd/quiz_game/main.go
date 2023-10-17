@@ -5,77 +5,83 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"strings"
 	"time"
 )
-
-// TODO: Run program with customizattion via flag: quiz-name, timer time
 
 type Quiz struct {
 	questions []string
 	answers   []string
 }
 
+// TODO: Run program with customizattion via flag: quiz-name, timer time
 var (
 	correct_answers int
 	wrong_answers   int
 	timeout         time.Duration
+	userAnswers     []string
 )
 
 func main() {
 	// add timeout for the quiz game
-	timeout = 10
+	timeout = 3 * time.Second
 
 	records, err := readData("test_questions.csv")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Output from the csv file: %v\n", records)
-
 	// define a new object of struct Quiz
 	// quiz_game := new(Quiz)
-
 	quiz_game := &Quiz{}
 	quiz_game.AddItem(records)
 
-	fmt.Printf("Number of questions: %v\n", len(quiz_game.questions))
-	fmt.Printf("Quiz answers: %v\n", quiz_game.answers)
+	// fmt.Printf("Number of questions: %v\n", len(quiz_game.questions))
+	// fmt.Printf("Quiz answers: %v\n", quiz_game.answers)
 
 	fmt.Println("Hello my friend. What is your name?")
 	name, err := readUserInput()
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Nice to meet you, %v! It's time to take a Quiz and have fun!\n", name)
+	fmt.Printf("Nice to meet you, %v! It's time to take a quiz and have fun!\n", name)
+	fmt.Printf("You will have %v seconds to complete the quiz. The time will start after you press \"Enter\". Good luck!\n", timeout.Seconds())
 
 	// TODO: ADD "ENTER LOGIC"
 
-	go quiz(quiz_game)
+	// Create channel for 'notification' of the completed quiz
+	waitCh := make(chan bool)
+
+	// start quiz logic
+	go quiz(quiz_game, waitCh)
 
 	select {
-	case <-time.After(timeout * time.Second):
-		fmt.Println("You are out of the time! Let's calculate your results.")
+	case <-time.After(timeout):
+		fmt.Println("\n\nOops, you are out of time!")
+	case <-waitCh:
+		fmt.Println("\nCongratulations, you have completed your quiz!")
 	}
 
-	// fmt.Printf("Congratulations, %v! You answered all the quiz questions. Here is your result\n", name)
-	fmt.Printf("Number of correct answers: %v\nNumber of wrong answers %v\n", correct_answers, wrong_answers)
+	calculateResult(quiz_game.answers, userAnswers)
+
+	fmt.Println("Here is your result:")
+	fmt.Printf("Number of correct answers: %v\nNumber of wrong answers: %v\n", correct_answers, wrong_answers)
 	fmt.Printf("You solved %v%% of the quiz. Now relax and drink your beer:)\n", (correct_answers)*100/len(quiz_game.questions))
 }
 
-func quiz(quiz_game *Quiz) {
-	// run the quiz questions
+func quiz(quiz_game *Quiz, waitCh chan bool) {
 	for num, question := range quiz_game.questions {
-
 		fmt.Printf("Question number %v: %v\n", (num + 1), question)
 		answer, err := readUserInput()
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		calculateResult(answer, quiz_game.answers[num])
+		userAnswers = append(userAnswers, answer)
+		// calculateResult(answer, quiz_game.answers[num])
 	}
+	waitCh <- true
 }
 
 func readData(fileName string) ([][]string, error) {
@@ -157,10 +163,21 @@ func checkAnswer(userAnswer string, correctAnswer string) bool {
 	return strings.EqualFold(userAnswer, correctAnswer)
 }
 
-func calculateResult(userAnswer string, correctAnswer string) {
-	if checkAnswer(userAnswer, correctAnswer) {
-		correct_answers++
-	} else {
-		wrong_answers++
+func calculateResult(answers []string, userAnswers []string) {
+
+	// append userAnswers response with nil
+	if len(userAnswers) != len(answers) {
+		// calculate difference len between two slices
+		diff := int(math.Abs(float64(len(userAnswers) - len(answers))))
+		addedValues := make([]string, diff)
+		userAnswers = append(userAnswers, addedValues...)
+	}
+
+	for i, answer := range userAnswers {
+		if checkAnswer(answer, answers[i]) {
+			correct_answers++
+		} else {
+			wrong_answers++
+		}
 	}
 }
