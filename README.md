@@ -39,11 +39,11 @@ To run the quiz program, use the following command format:
 ### Flags
 
 - `-filename quiz_problems.csv`: Specifies the CSV file containing quiz questions and answers. If not provided, the program defaults to `problems.csv`.
-- `-timeout time_in_seconds`: Sets the time limit for the quiz in seconds. The default timeout is 30 seconds.
+- `-timeout time_in_seconds`: Sets the time limit for the quiz in seconds. The default timeout is 30s.
 
 ### Example Usage
 
-1. Run the quiz with default settings (quiz.csv, 30 seconds timeout)
+1. Run the quiz with default settings (quiz.csv, 30s timeout)
 
    ```bash
    ./quiz

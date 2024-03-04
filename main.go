@@ -31,8 +31,13 @@ func main() {
 
 	quizProblems := prepareQuiz(records)
 
+	if len(quizProblems) == 0 {
+		fmt.Println("There are no qustions in the provided csv file!")
+		return
+	}
+
 	fmt.Println("Hello my friend! It's time to have some fun and take an easy-peasy quiz!")
-	fmt.Printf("You will have %d seconds to complete the quiz. The time will start after you press \"Enter\" key. Good luck!", timeout)
+	fmt.Printf("You will have %s to complete the quiz. The time will start after you press \"Enter\" key. Good luck!", timeout)
 
 	// Wait for the user to press "Enter"
 	bufio.NewReader(os.Stdin).ReadBytes('\n')
@@ -45,13 +50,14 @@ func main() {
 }
 
 // Adding flags: --filename, --timeout
-func readArguments() (string, int) {
+func readArguments() (string, time.Duration) {
 	filename := flag.String("filename", "quiz_problems.csv", "A csv file that contains quiz questions'")
-	timeout := flag.Int("timeout", 30, "The time limit for the quiz in seconds")
+	timeout := flag.Duration("timeout", time.Duration(30*time.Second), "The time limit for the quiz, e.g. 30s")
 	flag.Parse()
 	return *filename, *timeout
 }
 
+// document the function
 func readCSV(fileName string) ([][]string, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
@@ -79,10 +85,10 @@ func prepareQuiz(records [][]string) []QuizProblem {
 }
 
 // Running quiz with a timeout
-func startQuiz(quizProblems []QuizProblem, timeout int) []string {
+func startQuiz(quizProblems []QuizProblem, timeout time.Duration) []string {
 	// Create Timer
-	timer := time.NewTimer(time.Duration(timeout) * time.Second)
-	userAnswerCh := make(chan string)
+	timer := time.NewTimer(timeout)
+	userAnswerCh := make(chan string, len(quizProblems))
 
 problemloop:
 	for i, problem := range quizProblems {
